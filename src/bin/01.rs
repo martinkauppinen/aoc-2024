@@ -3,20 +3,15 @@ use itertools::Itertools;
 advent_of_code::solution!(1);
 
 fn parse_input(input: &str) -> (Vec<u64>, Vec<u64>) {
-    let mut a = Vec::new();
-    let mut b = Vec::new();
-    input
-        .lines()
-        .flat_map(|line| {
-            line.split_whitespace()
-                .map(str::parse::<u64>)
-                .map(Result::unwrap)
-        })
-        .tuples()
-        .for_each(|(x, y)| {
-            a.push(x);
-            b.push(y);
-        });
+    let line_parser = nom::sequence::separated_pair(
+        nom::character::complete::u64::<&str, ()>,
+        nom::character::complete::space1,
+        nom::character::complete::u64,
+    );
+    let mut parser =
+        nom::multi::separated_list1(nom::character::complete::line_ending, line_parser);
+    let (_, pairs) = parser(input).unwrap();
+    let (mut a, mut b): (Vec<u64>, Vec<u64>) = pairs.into_iter().multiunzip();
 
     a.sort_unstable();
     b.sort_unstable();
