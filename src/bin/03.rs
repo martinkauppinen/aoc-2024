@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::anychar,
+    character::complete::{anychar, char},
     combinator::map,
     multi::{many0, many_till},
     sequence::{delimited, preceded, separated_pair},
@@ -19,8 +19,7 @@ struct Machine {
 }
 
 impl Machine {
-    fn new(instructions: Vec<Instruction>) -> Self {
-        let instructions = VecDeque::from(instructions);
+    fn new(instructions: VecDeque<Instruction>) -> Self {
         Self {
             instructions,
             mul_enabled: true,
@@ -35,9 +34,9 @@ impl Machine {
             Some(Instruction::Dont) => {
                 self.mul_enabled = false;
             }
-            Some(Instruction::Mul(m)) => {
+            Some(Instruction::Mul(a, b)) => {
                 if self.mul_enabled {
-                    return Some(m.execute());
+                    return Some(a * b);
                 }
             }
             _ => (),
@@ -58,43 +57,34 @@ impl Machine {
 enum Instruction {
     Do,
     Dont,
-    Mul(Mul),
+    Mul(Output, Output),
 }
 
-#[derive(Debug)]
-struct Mul(Output, Output);
-
-fn instruction_parser(input: &[u8]) -> nom::IResult<&[u8], Instruction> {
+fn instruction_parser(input: &str) -> nom::IResult<&str, Instruction> {
     let do_parser = map(tag("do()"), |_| Instruction::Do);
     let dont_parser = map(tag("don't()"), |_| Instruction::Dont);
     let mul_parser = map(
         preceded(
-            tag(b"mul"),
+            tag("mul"),
             delimited(
-                tag(b"("),
+                char('('),
                 separated_pair(
                     nom::character::complete::u32,
-                    tag(b","),
+                    char(','),
                     nom::character::complete::u32,
                 ),
-                tag(b")"),
+                char(')'),
             ),
         ),
-        |(a, b)| Instruction::Mul(Mul(a, b)),
+        |(a, b)| Instruction::Mul(a, b),
     );
     alt((do_parser, mul_parser, dont_parser))(input)
 }
 
-impl Mul {
-    pub fn execute(self) -> Output {
-        self.0 * self.1
-    }
-}
-
-fn parse_input(input: &str) -> Vec<Instruction> {
+fn parse_input(input: &str) -> VecDeque<Instruction> {
     let mut preceded_mul_parser = many0(map(many_till(anychar, instruction_parser), |(_, x)| x));
 
-    preceded_mul_parser(input.as_bytes()).unwrap().1
+    preceded_mul_parser(input).unwrap().1.into()
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -103,10 +93,10 @@ pub fn part_one(input: &str) -> Option<u32> {
         instructions
             .into_iter()
             .filter_map(|x| match x {
-                Instruction::Mul(x) => Some(x),
+                Instruction::Mul(a, b) => Some((a, b)),
                 _ => None,
             })
-            .map(Mul::execute)
+            .map(|(a, b)| a * b)
             .sum(),
     )
 }
