@@ -13,13 +13,13 @@ type Update = Vec<u32>;
 #[derive(PartialEq, Eq)]
 struct Page<'a>(u32, &'a PageOrderingRules);
 
-impl<'a> PartialOrd for Page<'a> {
+impl PartialOrd for Page<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'a> Ord for Page<'a> {
+impl Ord for Page<'_> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if self.1[self.0 as usize].contains(&other.0) {
             std::cmp::Ordering::Less
