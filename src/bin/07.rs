@@ -31,7 +31,7 @@ impl Equation {
                 .map(|n| n / *number)
                 .collect();
         }
-        dp[0][0].contains(&0) || dp[1][0].contains(&1)
+        dp[0][1].contains(&self.numbers[0]) || dp[1][1].contains(&self.numbers[0])
     }
 
     fn is_valid_with_concatenation(&self) -> bool {
@@ -58,16 +58,21 @@ impl Equation {
                 .collect();
             dp[2][i] = next
                 .iter()
-                .filter(|n| {
+                .filter_map(|n| {
                     let num_digits = number.ilog10() + 1;
                     let modulus = 10u64.pow(num_digits);
-                    *n % modulus == *number
+                    if *n % modulus == *number {
+                        Some(*n / modulus)
+                    } else {
+                        None
+                    }
                 })
-                .map(|n| n / 10u64.pow(number.ilog10() + 1))
                 .collect();
         }
 
-        dp[0][0].contains(&0) || dp[1][0].contains(&1) || dp[2][1].contains(&self.numbers[0])
+        dp[0][1].contains(&self.numbers[0])
+            || dp[1][1].contains(&self.numbers[0])
+            || dp[2][1].contains(&self.numbers[0])
     }
 }
 
