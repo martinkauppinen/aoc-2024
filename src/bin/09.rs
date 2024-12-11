@@ -36,12 +36,12 @@ pub fn part_one(input: &str) -> Option<u64> {
     let mut head = 0;
     let mut tail = blocks.len() - 1;
 
-    while head < tail {
+    loop {
         while !matches!(blocks[head], Block::Empty) {
             head += 1;
         }
 
-        while !matches!(blocks[tail], Block::File { .. }) {
+        while matches!(blocks[tail], Block::Empty) {
             tail -= 1;
         }
 
